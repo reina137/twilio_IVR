@@ -20,11 +20,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'vkn0#^o137xl=nxw*vcehl-#e8!_g560+=6z&p5neo+=_^xm-h'
+
+# Read SECRET_KEY from an environment variable
+SECRET_KEY = os.environ['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = []
 
@@ -130,7 +131,19 @@ ALLOWED_HOSTS = [
 ]
 
 # Twilio auth // after test, change to env variable
-TWILIO_AUTH_TOKEN = 'd855a2e3fe090fe32947531206f45d10'
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
 
 # Activate Django-Heroku
 django_heroku.settings(locals())
+
+#deploy settings
+SECURE_HSTS_SECONDS = 3600
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+#connect DB
+import dj_database_url
+DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
