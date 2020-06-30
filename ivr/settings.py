@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
 import os
+import django_heroku
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -127,3 +128,9 @@ STATIC_URL = '/static/'
 ALLOWED_HOSTS = [
     '.ngrok.io',
 ]
+
+# Twilio auth // after test, change to env variable
+TWILIO_AUTH_TOKEN = 'd855a2e3fe090fe32947531206f45d10'
+
+# Activate Django-Heroku
+django_heroku.settings(locals())

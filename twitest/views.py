@@ -1,6 +1,27 @@
 from django.shortcuts import render
+import os
 
-# Create your views here.
+# Twilio authorization
+from django.conf import settings
+from django.http import HttpRequest
+from django.core.exceptions import SuspiciousOperation
+from twilio.request_validator import RequestValidator
+request_validator = RequestValidator(settings.TWILIO_AUTH_TOKEN)
+
+def validate_django_request(request: HttpRequest):
+   try:
+       signature = request.META['HTTP_X_TWILIO_SIGNATURE']
+   except KeyError:
+       is_valid_twilio_request = False
+   else:
+       is_valid_twilio_request = request_validator.validate(
+           signature = signature,
+           uri = request.get_raw_uri(),
+           params = request.POST,
+       )
+   if not is_valid_twilio_request:
+       # Invalid request from Twilio
+       raise SuspiciousOperation()
 
 # movies/views.py
 from django.http import HttpRequest, HttpResponse
@@ -12,6 +33,8 @@ from .models import Theater, Movie, Show
 
 
 @csrf_exempt
+def answer(request: HttpRequest) -> HttpResponse:
+    validate_django_request(request)
 def choose_theater(request: HttpRequest) -> HttpResponse:
    vr = VoiceResponse()
    vr.say('映画館情報メニューにようこそ!', voice='woman', language='ja-JP')
@@ -38,6 +61,8 @@ def choose_theater(request: HttpRequest) -> HttpResponse:
 
 
 @csrf_exempt
+def answer(request: HttpRequest) -> HttpResponse:
+    validate_django_request(request)
 def choose_movie(request: HttpRequest) -> HttpResponse:
    vr = VoiceResponse()
 
@@ -70,11 +95,12 @@ def choose_movie(request: HttpRequest) -> HttpResponse:
    return HttpResponse(str(vr), content_type='text/xml')
 
 
-
 import datetime
 from django.utils import timezone
 
 @csrf_exempt
+def answer(request: HttpRequest) -> HttpResponse:
+    validate_django_request(request)
 def list_showtimes(request: HttpRequest) -> HttpResponse:
    vr = VoiceResponse()
 
