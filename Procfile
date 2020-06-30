@@ -1,1 +1,1 @@
-web: gunicorn twitest:app
+web: gunicorn ivr.wsgi
