@@ -128,6 +128,7 @@ STATIC_URL = '/static/'
 
 ALLOWED_HOSTS = [
     '.ngrok.io',
+    '.herokuapp.com',
 ]
 
 # Twilio auth // after test, change to env variable
