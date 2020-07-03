@@ -27,11 +27,12 @@ def validate_django_request(request: HttpRequest):
 from django.http import HttpRequest, HttpResponse
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
-from twilio.twiml.voice_response import VoiceResponse
+from twilio.twiml.voice_response import Record, VoiceResponse, Say
 
 from .models import Theater, Movie, Show
 
 
+#Greeting and selection menu
 @csrf_exempt
 def answer(request: HttpRequest) -> HttpResponse:
     validate_django_request(request)
@@ -51,7 +52,7 @@ def choose_theater(request: HttpRequest) -> HttpResponse:
            .order_by('digits')
        )
        for theater in theaters:
-           gather.say(f' {theater.name} は、 {theater.digits}', voice='woman', language='ja-JP')
+           gather.say(f' {theater.name} は、 {theater.digits}、メッセージを送る場合は、3を押してください', voice='woman', language='ja-JP')
 
    vr.say('選択していません', voice='woman', language='ja-JP')
    vr.redirect('')
@@ -59,7 +60,7 @@ def choose_theater(request: HttpRequest) -> HttpResponse:
    return HttpResponse(str(vr), content_type='text/xml')
 
 
-
+#Select movie menu
 @csrf_exempt
 def answer(request: HttpRequest) -> HttpResponse:
     validate_django_request(request)
@@ -95,6 +96,7 @@ def choose_movie(request: HttpRequest) -> HttpResponse:
    return HttpResponse(str(vr), content_type='text/xml')
 
 
+#List movie broadcast times menu
 import datetime
 from django.utils import timezone
 
@@ -135,3 +137,28 @@ def list_showtimes(request: HttpRequest) -> HttpResponse:
        vr.hangup()
 
    return HttpResponse(str(vr), content_type='text/xml')
+
+
+#Record message 
+@csrf_exempt
+def answer(request: HttpRequest) -> HttpResponse:
+    validate_django_request(request)
+def record_message(request: HttpRequest) -> HttpResponse:
+   vr = VoiceResponse()
+   digits = request.POST.get('Digits')
+
+   vr.say('こちらはメッセージを送るメニューです。終わったら、シャープマークを押してください。メッセージどうぞ：', voice='woman', language='ja-JP')
+   vr.record(timeout=10, max_length=50, finish_on_key='#', action=reverse('save-to-dropbox'), method='POST', transcribe=True)
+   vr.say('メッセージがありません。')
+
+#Save message to dropbox
+import dropbox
+
+@csrf_exempt
+def answer(request: HttpRequest) -> HttpResponse:
+    validate_django_request(request)
+def save_to_dropbox(request: HttpRequest) -> HttpResponse:
+    rec_name = request.POST.get('RecordingSid')+'.wav'
+    rec_url = request.POST.get('RecordingUrl')
+    dbx = dropbox.Dropbox('DROPBOX_ACCESS_TOKEN')
+    dbx.files_upload(rec_name,rec_url, mute=True, client_modified=timezone.now())
